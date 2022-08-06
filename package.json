@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "lodash.debounce": "^4.0.8",
-    "modern-normalize": "^1.1.0",
-    
+    "modern-normalize": "^1.1.0"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.6.0",
