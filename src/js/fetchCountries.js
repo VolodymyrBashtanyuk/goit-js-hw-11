@@ -1,11 +1,14 @@
-const URL = 'https://restcountries.com/v2';
+const BASE_URL = 'https://pixabay.com/api/';
+const KEY = '29112900-b21ef4ae161236dc81924b64f';
+const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true`;
 
-   export default function fetchCountries(name) {
+async function fetchImage(name) {
 
-        return fetch(`${URL}/name/${name}?fields=name,capital,population,flags,languages`)
-        .then(response => response.json())
-        .then(dataCountries =>  dataCountries)
-    };
+    const fetchRequest = await fetch(`${REQUEST_URL}&q=${name}`)
+    const responce = await fetchRequest.json()
+    return responce;
+};
     
 
 
+export  { fetchImage };
