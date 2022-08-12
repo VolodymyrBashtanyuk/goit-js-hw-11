@@ -1,6 +1,6 @@
 // import { fetchImage } from './fetchGalleries';
 import GalleriesApi from './fetchGalleries'
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import Notiflix from 'notiflix';
 import SimpleLightbox from "simplelightbox";
 
 import '../css/styles.css';
@@ -11,23 +11,38 @@ const galleries = document.querySelector('.gallery');
 const loadButton = document.querySelector('.load-more')
 loadButton.classList.add('ishidden');
 
+// const heightCard = galleries.firstElementChild.getBoundingClientRect();
+
+// window.scrollBy({
+//   top: 300 * 2,
+//   behavior: "smooth",
+// });
+
 const galleriesApi = new GalleriesApi();
 
 searchForm.addEventListener('submit', onSearchForm);
 loadButton.addEventListener('click', onLoadButton);
 
+async function responseData() {
+    try {
+        const hits = await galleriesApi.fetchImage();
+        insertGalleries(hits);
+    } catch (error) {
+        console.log(error);
+    }
+};
 
-
-function onSearchForm(e) {
+ function onSearchForm(e) {
     e.preventDefault();
 
     galleriesApi.nameImage = e.currentTarget.elements.searchQuery.value;
     if (galleriesApi.nameImage === '') {
-        Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+        Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
         return;
     }
-    galleriesApi.fetchImage().then(hits => insertGalleries(hits));
+    responseData();
     galleriesApi.resetPage();
+    clearGalleries(); 
     loadButton.classList.remove('ishidden');
 
 };
@@ -35,15 +50,20 @@ function onSearchForm(e) {
 
 function insertGalleries(list) {
     const imagesItem = galleriesList(list);
-    galleries.insertAdjacentHTML('beforeend', imagesItem)
+    // console.log(list)
+    // Notiflix.Notify.success(`Hooray! We found ${list.totalHits} images.`);
+    galleries.insertAdjacentHTML('beforeend', imagesItem);
 }
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
 
 function imagesMarkup(data) {
-    const {webformatURL,  tags, likes, views, comments, downloads } = data;
+    const { largeImageURL, webformatURL, tags, likes, views, comments, downloads } = data;
+    
 return `<div class='photo-card'>
+  <a href='${largeImageURL}'>
   <img src='${webformatURL}' alt='${tags}' loading='lazy' width='300' height='200' />
+  </a>
   <div class='info'>
     <p class='info-item'>
       <b>Likes</b>${likes}
@@ -59,9 +79,21 @@ return `<div class='photo-card'>
     </p>
   </div>
 </div> `
-}
+};
+
+new SimpleLightbox( '.gallery a', {captionSelector: 'img', }).refresh();
+// let gallery = new SimpleLightbox('.photo-card a');
+// gallery.on('show.simplelightbox', function () {
+// 	// Do something…
+//     gallery.open('.photo-card a');
+// });
+console.log(new SimpleLightbox('.photo-card  a'));
 
 function onLoadButton() {
-    galleriesApi.fetchImage().then(hits => insertGalleries(hits));
-    
-}
+   responseData()
+};
+
+const clearGalleries = () => galleries.innerHTML = '';
+
+
+
