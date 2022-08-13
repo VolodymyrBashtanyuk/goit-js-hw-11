@@ -42,7 +42,7 @@ padding: 0;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-
+  /* height: 200px; */
   margin-top: 80px;
 }
 .photo-card{
@@ -50,12 +50,14 @@ padding: 0;
   margin-bottom: 20px;
   box-shadow: -4px 6px 37px 3px rgba(74, 152, 158, 1);
   border-radius: 4px;
+  
 }
 .photo-card:nth-child(4n){
   margin-right: 0;
 }
 .photo-card img {
   display: block;
+  
 }
 
 .info {

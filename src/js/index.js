@@ -1,31 +1,24 @@
-// import { fetchImage } from './fetchGalleries';
+import lightBoxPage from './simpLightBox'
 import GalleriesApi from './fetchGalleries'
 import Notiflix from 'notiflix';
-import SimpleLightbox from "simplelightbox";
-
 import '../css/styles.css';
-import "simplelightbox/dist/simple-lightbox.min.css";
 
 const searchForm = document.querySelector('.search-form');
 const galleries = document.querySelector('.gallery');
 const loadButton = document.querySelector('.load-more')
 loadButton.classList.add('ishidden');
 
-// const heightCard = galleries.firstElementChild.getBoundingClientRect();
-
-// window.scrollBy({
-//   top: 300 * 2,
-//   behavior: "smooth",
-// });
-
 const galleriesApi = new GalleriesApi();
 
 searchForm.addEventListener('submit', onSearchForm);
 loadButton.addEventListener('click', onLoadButton);
 
+// let total = 0;
+// console.log(total)
 async function responseData() {
     try {
-        const hits = await galleriesApi.fetchImage();
+      const hits = await galleriesApi.fetchImage();
+      // total = 500;
         insertGalleries(hits);
     } catch (error) {
         console.log(error);
@@ -39,31 +32,29 @@ async function responseData() {
     if (galleriesApi.nameImage === '') {
         Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
         return;
-    }
-    responseData();
+   }
     galleriesApi.resetPage();
-    clearGalleries(); 
-    loadButton.classList.remove('ishidden');
+     clearGalleries(); 
+     responseData();
+     loadButton.classList.remove('ishidden');     
 
 };
 
-
 function insertGalleries(list) {
     const imagesItem = galleriesList(list);
-    // console.log(list)
-    // Notiflix.Notify.success(`Hooray! We found ${list.totalHits} images.`);
     galleries.insertAdjacentHTML('beforeend', imagesItem);
+    lightBoxPage.createLightBox();
 }
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
 
 function imagesMarkup(data) {
     const { largeImageURL, webformatURL, tags, likes, views, comments, downloads } = data;
-    
-return `<div class='photo-card'>
+    return `
+<div class='photo-card'>
   <a href='${largeImageURL}'>
   <img src='${webformatURL}' alt='${tags}' loading='lazy' width='300' height='200' />
-  </a>
+  </a> 
   <div class='info'>
     <p class='info-item'>
       <b>Likes</b>${likes}
@@ -78,22 +69,32 @@ return `<div class='photo-card'>
       <b>Downloads</b>${downloads}
     </p>
   </div>
-</div> `
+</div>`
 };
-
-new SimpleLightbox( '.gallery a', {captionSelector: 'img', }).refresh();
-// let gallery = new SimpleLightbox('.photo-card a');
-// gallery.on('show.simplelightbox', function () {
-// 	// Do something…
-//     gallery.open('.photo-card a');
-// });
-console.log(new SimpleLightbox('.photo-card  a'));
 
 function onLoadButton() {
-   responseData()
+    responseData();
+    lightBoxPage.refresh();
 };
+
+// function totalPages(total) {
+//     Notiflix.Notify.success(`Hooray! We found ${total} images.`);
+// }
 
 const clearGalleries = () => galleries.innerHTML = '';
 
+// const { height: cardHeight } = galleries.firstElementChild.getBoundingClientRect();
+// console.log(height)
+//   window.scrollBy({
+//     top: cardHeight * 2,
+//     behavior: 'smooth'
+//   });
 
 
+
+{/* <div class="container">
+  <article class="post">...</article>
+  <article class="post">...</article>
+  <article class="post">...</article>
+  ...
+</div> */}

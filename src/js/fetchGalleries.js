@@ -1,22 +1,22 @@
-// const BASE_URL = 'https://pixabay.com/api/';
-// const KEY = '29112900-b21ef4ae161236dc81924b64f';
-// const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true`;
+// import Notiflix from 'notiflix';
 
-// let page = 1;
 
 export default class GallerisApiService {
     constructor() {
         this.name = '';
         this.page = 1;
+        this.perPage = 20;
+        // this.total = 0;
     }
 
     async fetchImage() {
         const BASE_URL = 'https://pixabay.com/api/';
         const KEY = '29112900-b21ef4ae161236dc81924b64f';
-        const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true&q=${this.name}&page=${this.page}&per_page=20`;
+        const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true&q=${this.name}&page=${this.page}&per_page=${this.perPage}`;
 
         const fetchRequest = await fetch(REQUEST_URL);
         const responce = await fetchRequest.json();
+        // this.totalPage(responce);
         this.incrimentPage();
         return responce.hits;
     };
@@ -24,7 +24,7 @@ export default class GallerisApiService {
     incrimentPage() {
         this.page += 1;
     };
-
+    
     resetPage() {
         this.page = 1;
     }
