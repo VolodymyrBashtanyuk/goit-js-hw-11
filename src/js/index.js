@@ -1,27 +1,33 @@
 import lightBoxPage from './simpLightBox'
 import GalleriesApi from './fetchGalleries'
 import Notiflix from 'notiflix';
+import InfiniteScroll from 'infinite-scroll';
 import '../css/styles.css';
 
 const searchForm = document.querySelector('.search-form');
 const galleries = document.querySelector('.gallery');
-const loadButton = document.querySelector('.load-more')
+const loadButton = document.querySelector('.load-more');
+const textNote = document.querySelector('.note');
+
 loadButton.classList.add('ishidden');
+textNote.classList.add('ishidden');
+
+
 
 const galleriesApi = new GalleriesApi();
 
 searchForm.addEventListener('submit', onSearchForm);
 loadButton.addEventListener('click', onLoadButton);
 
-// let total = 0;
-// console.log(total)
+
+
 async function responseData() {
     try {
-      const hits = await galleriesApi.fetchImage();
-      // total = 500;
-        insertGalleries(hits);
+      const collectionGalleries = await galleriesApi.fetchImage();
+      insertGalleries(collectionGalleries);
+      // notification(collectionGalleries);
     } catch (error) {
-        console.log(error);
+      console.log()
     }
 };
 
@@ -29,21 +35,45 @@ async function responseData() {
     e.preventDefault();
 
     galleriesApi.nameImage = e.currentTarget.elements.searchQuery.value;
-    if (galleriesApi.nameImage === '') {
-        Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-        return;
-   }
-    galleriesApi.resetPage();
-     clearGalleries(); 
+   if (notification === false) {
+     return;
+   } else {
+     galleriesApi.resetPage();
+     clearGalleries();
      responseData();
-     loadButton.classList.remove('ishidden');     
 
+   }
 };
 
-function insertGalleries(list) {
-    const imagesItem = galleriesList(list);
-    galleries.insertAdjacentHTML('beforeend', imagesItem);
-    lightBoxPage.createLightBox();
+const notification = (response) => {
+  const page = Math.ceil(response.totalHits / galleriesApi.perPage);
+  const lastRender = galleriesApi.page;
+  
+  if (response.totalHits === 0 || galleriesApi.nameImage === '') {
+    Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
+    loadButton.classList.add('ishidden');
+    textNote.classList.add('ishidden');
+    clearGalleries(); 
+    return false;
+  } else if (galleriesApi.page === 2) {
+    Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
+    setTimeout(() => {
+       loadButton.classList.remove('ishidden');
+    }, 500)
+  } else if (lastRender > page) {
+    loadButton.classList.add('ishidden');
+    textNote.classList.remove('ishidden');
+  }
+  
+};
+
+function insertGalleries(galleriesRespons) {
+  notification(galleriesRespons);
+  const imagesItem = galleriesList(galleriesRespons.hits);
+  galleries.insertAdjacentHTML('beforeend', imagesItem);
+  
+
+  lightBoxPage.createLightBox();
 }
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
@@ -69,7 +99,8 @@ function imagesMarkup(data) {
       <b>Downloads</b>${downloads}
     </p>
   </div>
-</div>`
+</div>
+`
 };
 
 function onLoadButton() {
@@ -77,12 +108,28 @@ function onLoadButton() {
     lightBoxPage.refresh();
 };
 
-// function totalPages(total) {
-//     Notiflix.Notify.success(`Hooray! We found ${total} images.`);
-// }
-
 const clearGalleries = () => galleries.innerHTML = '';
 
+// const { height: cardHeight } = galleries.firstElementChild.getBoundingClientRect();
+// console.log( cardHeight)
+//   window.scrollBy({
+//     top: cardHeight * 5,
+//     behavior: 'smooth',
+//   })
+
+// new InfiniteScroll('.gallery', {
+//   // path: responseData(),
+//   // status: '.infinite-scroll-load',
+//   button: '.load-more',
+//   // loadOnScroll: true,
+//   // onInit: function () {
+//   //   this.on('append', onLoadButton())
+//   // },
+//   // prefill: false,
+//   // checkLastPage: 20,
+//   // scrollThreshold: 20,
+// })
+// console.log(galleriesApi.constructor(this.page))
 // const { height: cardHeight } = galleries.firstElementChild.getBoundingClientRect();
 // console.log(height)
 //   window.scrollBy({

@@ -1,12 +1,14 @@
 // import Notiflix from 'notiflix';
 
+import axios from "axios";
+
 
 export default class GallerisApiService {
     constructor() {
         this.name = '';
         this.page = 1;
-        this.perPage = 20;
-        // this.total = 0;
+        this.perPage = 40;
+        this.message = "We're sorry, but you've reached the end of search results."
     }
 
     async fetchImage() {
@@ -14,11 +16,10 @@ export default class GallerisApiService {
         const KEY = '29112900-b21ef4ae161236dc81924b64f';
         const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true&q=${this.name}&page=${this.page}&per_page=${this.perPage}`;
 
-        const fetchRequest = await fetch(REQUEST_URL);
-        const responce = await fetchRequest.json();
-        // this.totalPage(responce);
-        this.incrimentPage();
-        return responce.hits;
+        const fetchRequest = await axios.get(REQUEST_URL);
+        const responce = await fetchRequest.data;
+        this.incrimentPage(); 
+        return responce;
     };
 
     incrimentPage() {

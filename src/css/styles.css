@@ -42,7 +42,7 @@ padding: 0;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  /* height: 200px; */
+  height: 100%;
   margin-top: 80px;
 }
 .photo-card{
@@ -50,6 +50,7 @@ padding: 0;
   margin-bottom: 20px;
   box-shadow: -4px 6px 37px 3px rgba(74, 152, 158, 1);
   border-radius: 4px;
+  /* height: 200px; */
   
 }
 .photo-card:nth-child(4n){
@@ -91,6 +92,9 @@ display: block;
   background-color: transparent;
   box-shadow: -4px 6px 37px 3px rgba(74, 152, 158, 1);
   cursor: pointer;
+}
+.note{
+  text-align: center;
 }
 .ishidden {
   display: none;
