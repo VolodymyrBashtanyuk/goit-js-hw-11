@@ -1,78 +1,95 @@
 import lightBoxPage from './simpLightBox'
 import GalleriesApi from './fetchGalleries'
 import Notiflix from 'notiflix';
-import InfiniteScroll from 'infinite-scroll';
 import '../css/styles.css';
+import throttle from 'lodash.throttle';
 
 const searchForm = document.querySelector('.search-form');
 const galleries = document.querySelector('.gallery');
 const loadButton = document.querySelector('.load-more');
 const textNote = document.querySelector('.note');
 
-loadButton.classList.add('ishidden');
-textNote.classList.add('ishidden');
-
-
-
 const galleriesApi = new GalleriesApi();
 
 searchForm.addEventListener('submit', onSearchForm);
 loadButton.addEventListener('click', onLoadButton);
+window.addEventListener("scroll", throttle(checkPosition, 250));
 
+const buttonIsHidden = () => loadButton.classList.add('ishidden');
+const textIsHidden = () => textNote.classList.add('ishidden');
+const buttonVisible = () => loadButton.classList.remove('ishidden');
+const textVisible = () => textNote.classList.remove('ishidden');
+const clearGalleries = () => galleries.innerHTML = '';
+const errors = () => Notiflix.Notify.failure('error');
+
+let isLoading = false;
+let shouldLoad = true;
+
+
+
+buttonIsHidden();
+textIsHidden();
 
 
 async function responseData() {
     try {
       const collectionGalleries = await galleriesApi.fetchImage();
       insertGalleries(collectionGalleries);
-      // notification(collectionGalleries);
+      notification(collectionGalleries);
+
     } catch (error) {
-      console.log()
+      errors(error);
     }
 };
 
  function onSearchForm(e) {
-    e.preventDefault();
+     e.preventDefault();
 
-    galleriesApi.nameImage = e.currentTarget.elements.searchQuery.value;
+      galleriesApi.nameImage = e.currentTarget.elements.searchQuery.value;
    if (notification === false) {
-     return;
+      return;
    } else {
      galleriesApi.resetPage();
-     clearGalleries();
-     responseData();
-
+      clearGalleries();
+      responseData();
+      buttonIsHidden();
+     textIsHidden();
    }
 };
 
 const notification = (response) => {
   const page = Math.ceil(response.totalHits / galleriesApi.perPage);
-  const lastRender = galleriesApi.page;
+  const pagesApi = galleriesApi.page;
   
-  if (response.totalHits === 0 || galleriesApi.nameImage === '') {
+  if (response.totalHits === 0 || galleriesApi.name === '') {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
     loadButton.classList.add('ishidden');
     textNote.classList.add('ishidden');
     clearGalleries(); 
     return false;
-  } else if (galleriesApi.page === 2) {
+  } else if (pagesApi === 2) {
     Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
     setTimeout(() => {
-       loadButton.classList.remove('ishidden');
+      buttonVisible();
     }, 500)
-  } else if (lastRender > page) {
-    loadButton.classList.add('ishidden');
-    textNote.classList.remove('ishidden');
-  }
-  
+  } else if (pagesApi > page) {
+      buttonIsHidden();
+      textVisible();
+  } 
 };
 
 function insertGalleries(galleriesRespons) {
-  notification(galleriesRespons);
   const imagesItem = galleriesList(galleriesRespons.hits);
   galleries.insertAdjacentHTML('beforeend', imagesItem);
-  
 
+  if (galleriesRespons.totalHits !== 0) {
+  const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  })
+  };
   lightBoxPage.createLightBox();
 }
 
@@ -108,40 +125,35 @@ function onLoadButton() {
     lightBoxPage.refresh();
 };
 
-const clearGalleries = () => galleries.innerHTML = '';
+// infinity scroll
+function checkPosition({totalHits}) {
 
-// const { height: cardHeight } = galleries.firstElementChild.getBoundingClientRect();
-// console.log( cardHeight)
-//   window.scrollBy({
-//     top: cardHeight * 5,
-//     behavior: 'smooth',
-//   })
+  const height = galleries.offsetHeight;
+  const screenHeight = window.innerHeight;
+  const scrolled = window.pageYOffset;
+  const threshold = height - screenHeight / 3;
 
-// new InfiniteScroll('.gallery', {
-//   // path: responseData(),
-//   // status: '.infinite-scroll-load',
-//   button: '.load-more',
-//   // loadOnScroll: true,
-//   // onInit: function () {
-//   //   this.on('append', onLoadButton())
-//   // },
-//   // prefill: false,
-//   // checkLastPage: 20,
-//   // scrollThreshold: 20,
-// })
-// console.log(galleriesApi.constructor(this.page))
-// const { height: cardHeight } = galleries.firstElementChild.getBoundingClientRect();
-// console.log(height)
-//   window.scrollBy({
-//     top: cardHeight * 2,
-//     behavior: 'smooth'
-//   });
+  const position = scrolled + screenHeight
 
+  if (position >= threshold) {
+   scrolling(totalHits);
+  }
+}
 
+function scrolling(number) {
+  const page = Math.ceil(number / galleriesApi.page);
+   if (isLoading || !shouldLoad) {
+     return;
+   }
+  isLoading = true
+  responseData();
+  lightBoxPage.refresh()
+  let nextPage = galleriesApi.page;
 
-{/* <div class="container">
-  <article class="post">...</article>
-  <article class="post">...</article>
-  <article class="post">...</article>
-  ...
-</div> */}
+   if (nextPage === page) {
+     shouldLoad = false;
+    window.removeEventListener("scroll", checkPosition);
+    
+   }
+   isLoading = false;
+}
