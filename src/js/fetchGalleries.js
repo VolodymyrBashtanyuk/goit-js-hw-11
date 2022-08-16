@@ -2,38 +2,19 @@
 import axios from "axios";
 
 
-export default class GallerisApiService {
-    constructor() {
-        this.name = '';
-        this.page = 1;
-        this.perPage = 40;
-        this.message = "We're sorry, but you've reached the end of search results."
-    }
+const perPage = 40;
 
-    async fetchImage() {
-        const BASE_URL = 'https://pixabay.com/api/';
-        const KEY = '29112900-b21ef4ae161236dc81924b64f';
-        const REQUEST_URL = `${BASE_URL}?key=${KEY}&image_type=photo&orientation=horizontal&safesearch=true&q=${this.name}&page=${this.page}&per_page=${this.perPage}`;
+ async function fetchImage(name, page) {
 
-        const fetchRequest = await axios.get(REQUEST_URL);
-        const responce = await fetchRequest.data;
-        this.incrimentPage(); 
-        return responce;
-    };
+    const BASE_URL = 'https://pixabay.com/api/';
+    const KEY = '29112900-b21ef4ae161236dc81924b64f';
+    const filterUrl = 'image_type=photo&orientation=horizontal&safesearch=true';
 
-    incrimentPage() {
-        this.page += 1;
-    };
-    
-    resetPage() {
-        this.page = 1;
-    }
+    const REQUEST_URL = `${BASE_URL}?key=${KEY}&${filterUrl}&q=${name}&page=${page}&per_page=${perPage}`;
 
-    get nameImage() {
-        return this.name;
-    }
+    const fetchRequest = await axios.get(REQUEST_URL);
+    const responce = await fetchRequest.data;
+    return responce;
+};
 
-    set nameImage(newName) {
-        this.name = newName;
-    }
-}
+export { fetchImage, perPage };

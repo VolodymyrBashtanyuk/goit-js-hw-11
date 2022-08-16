@@ -1,5 +1,5 @@
-import lightBoxPage from './simpLightBox'
-import GalleriesApi from './fetchGalleries'
+import {refresh, createLightBox } from './simpLightBox'
+import { fetchImage, perPage } from './fetchGalleries'
 import Notiflix from 'notiflix';
 import '../css/styles.css';
 import throttle from 'lodash.throttle';
@@ -7,80 +7,71 @@ import throttle from 'lodash.throttle';
 const searchForm = document.querySelector('.search-form');
 const galleries = document.querySelector('.gallery');
 const loadButton = document.querySelector('.load-more');
-const textNote = document.querySelector('.note');
-
-const galleriesApi = new GalleriesApi();
 
 searchForm.addEventListener('submit', onSearchForm);
 loadButton.addEventListener('click', onLoadButton);
 window.addEventListener("scroll", throttle(checkPosition, 250));
 
 const buttonIsHidden = () => loadButton.classList.add('ishidden');
-const textIsHidden = () => textNote.classList.add('ishidden');
 const buttonVisible = () => loadButton.classList.remove('ishidden');
-const textVisible = () => textNote.classList.remove('ishidden');
+
 const clearGalleries = () => galleries.innerHTML = '';
 const errors = () => Notiflix.Notify.failure('error');
+
+
+const increment = () => page += 1;
+const resetPage = () => page = 1;
+
+let name = '';
+let page = 1;
 
 let isLoading = false;
 let shouldLoad = true;
 
-
-
 buttonIsHidden();
-textIsHidden();
 
+const notification = (response) => {
+  const totalPage = Math.ceil(response.totalHits / perPage);
+  if (response.totalHits === 0) {
+    Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
+    buttonIsHidden();
+    clearGalleries();
+  } else if (page === 1) {
+    Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
+    setTimeout(() => {
+      buttonVisible();
+    }, 500)
+  }else if (page > totalPage){
+      buttonIsHidden();
+  } 
+};
+
+ function onSearchForm(e) {
+    e.preventDefault()
+   name = e.currentTarget.elements.searchQuery.value;
+      buttonIsHidden();  
+      resetPage();
+      clearGalleries();
+      responseData();
+      
+};
 
 async function responseData() {
     try {
-      const collectionGalleries = await galleriesApi.fetchImage();
-      insertGalleries(collectionGalleries);
+      const collectionGalleries = await fetchImage(name, page);
       notification(collectionGalleries);
-
+      increment(); 
+      insertGalleries(collectionGalleries);
+      checkPosition();
     } catch (error) {
       errors(error);
     }
 };
 
- function onSearchForm(e) {
-     e.preventDefault();
-
-      galleriesApi.nameImage = e.currentTarget.elements.searchQuery.value;
-   if (notification === false) {
-      return;
-   } else {
-     galleriesApi.resetPage();
-      clearGalleries();
-      responseData();
-      buttonIsHidden();
-     textIsHidden();
-   }
-};
-
-const notification = (response) => {
-  const page = Math.ceil(response.totalHits / galleriesApi.perPage);
-  const pagesApi = galleriesApi.page;
-  
-  if (response.totalHits === 0 || galleriesApi.name === '') {
-    Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
-    loadButton.classList.add('ishidden');
-    textNote.classList.add('ishidden');
-    clearGalleries(); 
-    return false;
-  } else if (pagesApi === 2) {
-    Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
-    setTimeout(() => {
-      buttonVisible();
-    }, 500)
-  } else if (pagesApi > page) {
-      buttonIsHidden();
-      textVisible();
-  } 
-};
-
 function insertGalleries(galleriesRespons) {
   const imagesItem = galleriesList(galleriesRespons.hits);
   galleries.insertAdjacentHTML('beforeend', imagesItem);
+  
 
   if (galleriesRespons.totalHits !== 0) {
   const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
@@ -90,7 +81,7 @@ function insertGalleries(galleriesRespons) {
     behavior: 'smooth',
   })
   };
-  lightBoxPage.createLightBox();
+  createLightBox();
 }
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
@@ -121,39 +112,43 @@ function imagesMarkup(data) {
 };
 
 function onLoadButton() {
-    responseData();
-    lightBoxPage.refresh();
+  responseData();
+  refresh();
 };
 
-// infinity scroll
-function checkPosition({totalHits}) {
-
+// // infinity scroll
+function checkPosition() {
+  // console.log(totalHits)
   const height = galleries.offsetHeight;
   const screenHeight = window.innerHeight;
   const scrolled = window.pageYOffset;
-  const threshold = height - screenHeight / 3;
+  const threshold = height - screenHeight / 4;
 
   const position = scrolled + screenHeight
 
   if (position >= threshold) {
-   scrolling(totalHits);
+    scrolling();
+// console.log(totalHits)
+    
   }
 }
 
-function scrolling(number) {
-  const page = Math.ceil(number / galleriesApi.page);
+function scrolling() {
+  // console.log(number)
+  // const pageTotal = Math.ceil(number / perPage);
    if (isLoading || !shouldLoad) {
      return;
-   }
-  isLoading = true
+  }
+  
+  isLoading = true;
   responseData();
-  lightBoxPage.refresh()
-  let nextPage = galleriesApi.page;
-
-   if (nextPage === page) {
+  refresh();
+  
+   if (  4 ) {
      shouldLoad = false;
-    window.removeEventListener("scroll", checkPosition);
-    
-   }
+     Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
+     window.removeEventListener("scroll", checkPosition);
+     
+  }
    isLoading = false;
 }
