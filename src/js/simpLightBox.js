@@ -8,4 +8,4 @@ const lightbox = new SimpleLightbox('.gallery a', {
     captionDelay: 250,
 });
 
-export  { lightbox };
+export default  lightbox

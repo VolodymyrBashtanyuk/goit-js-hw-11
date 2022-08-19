@@ -1,5 +1,5 @@
-import { lightbox } from './simpLightBox'
-import { fetchImage, PERPAGE } from './fetchGalleries'
+import lightbox  from './simpLightBox'
+import { fetchImage, PER_PAGE } from './fetchGalleries'
 import Notiflix from 'notiflix';
 import '../css/styles.css';
 
@@ -15,7 +15,7 @@ const buttonIsHidden = () => loadButton.classList.add('ishidden');
 const buttonVisible = () => loadButton.classList.remove('ishidden');
 
 const clearGalleries = () => galleries.innerHTML = '';
-const unknown = () => Notiflix.Notify.failure(`Server not response`);
+const unknown = () => Notiflix.Notify.failure(`Ups something wrong! Please try again. `);
 
 
 const increment = () => page += 1;
@@ -28,7 +28,10 @@ buttonIsHidden();
 
 function onSearchForm(e) {
     e.preventDefault()
-   name = e.currentTarget.elements.searchQuery.value;
+   name = e.currentTarget.elements.searchQuery.value.trim();
+   if(name === ''){
+    return;
+   }
       buttonIsHidden();  
       resetPage();
       clearGalleries();
@@ -39,7 +42,6 @@ async function responseData() {
     try {
       const collectionGalleries = await fetchImage(name, page);
       notification(collectionGalleries);
-      insertGalleries(collectionGalleries);
       lightbox.refresh();
 
     } catch (error) {
@@ -48,39 +50,41 @@ async function responseData() {
 };
 
 function notification(response){
-  const totalPage = Math.ceil(response.totalHits / PERPAGE);
+  const totalPage = Math.ceil(response.totalHits / PER_PAGE);
 
   if (response.totalHits === 0) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
     buttonIsHidden();
     clearGalleries();
-  } else if (page === 1) {
-    Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
-    setTimeout(() => {
-      buttonVisible();
-    }, 500)
-  }else if (page >= totalPage){
+    return;
+  } else if (page >= totalPage){
       buttonIsHidden();
      Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
-     return;
-
   } 
+
+  insertGalleries(response);
+  
 };
 
 function insertGalleries(galleriesRespons) {
 
+  if (page === 1) {
+    Notiflix.Notify.success(`Hooray! We found ${galleriesRespons.totalHits} images.`);
+    setTimeout(() => {
+      buttonVisible();
+    }, 500)
+  }
+
   const imagesItem = galleriesList(galleriesRespons.hits);
   galleries.insertAdjacentHTML('beforeend', imagesItem);
 
-
-  if (galleriesRespons.totalHits !== 0) {
   const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
 
   window.scrollBy({
     top: cardHeight * 11,
     behavior: 'smooth',
   })
-  };
+
 }
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
