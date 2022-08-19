@@ -1,8 +1,7 @@
-import {refresh, createLightBox } from './simpLightBox'
-import { fetchImage, perPage } from './fetchGalleries'
+import { lightbox } from './simpLightBox'
+import { fetchImage, PERPAGE } from './fetchGalleries'
 import Notiflix from 'notiflix';
 import '../css/styles.css';
-// import throttle from 'lodash.throttle';
 
 const searchForm = document.querySelector('.search-form');
 const galleries = document.querySelector('.gallery');
@@ -16,7 +15,7 @@ const buttonIsHidden = () => loadButton.classList.add('ishidden');
 const buttonVisible = () => loadButton.classList.remove('ishidden');
 
 const clearGalleries = () => galleries.innerHTML = '';
-const errors = () => Notiflix.Notify.failure('error');
+const unknown = () => Notiflix.Notify.failure(`Server not response`);
 
 
 const increment = () => page += 1;
@@ -41,14 +40,16 @@ async function responseData() {
       const collectionGalleries = await fetchImage(name, page);
       notification(collectionGalleries);
       insertGalleries(collectionGalleries);
-      increment(); 
+      lightbox.refresh();
+
     } catch (error) {
-      errors(error);
+      unknown();
     } 
 };
 
 function notification(response){
-  const totalPage = Math.ceil(response.totalHits / perPage);
+  const totalPage = Math.ceil(response.totalHits / PERPAGE);
+
   if (response.totalHits === 0) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
     buttonIsHidden();
@@ -70,7 +71,7 @@ function insertGalleries(galleriesRespons) {
 
   const imagesItem = galleriesList(galleriesRespons.hits);
   galleries.insertAdjacentHTML('beforeend', imagesItem);
-  createLightBox();
+
 
   if (galleriesRespons.totalHits !== 0) {
   const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
@@ -110,41 +111,6 @@ function imagesMarkup(data) {
 };
 
 function onLoadButton() {
+  increment(); 
   responseData();
-  refresh();
 };
-
-
-
-
-// // infinity scroll 
-// function checkPosition() {
-//   const height = galleries.offsetHeight;
-//   const screenHeight = window.innerHeight;
-//   const scrolled = window.pageYOffset;
-//   const threshold = height - screenHeight / 4;
-
-//   const position = scrolled + screenHeight
-// console.log(screenHeight)
-//   if (position >= threshold ){
-//     responseData();
-//     refresh();
-// }
-// };
-
-// function scrolling() {
-
-//    if (isLoading || !shouldLoad) {
-//      return;
-//   }else if(){
-//     shouldLoad = false;
-//    isLoading = false;
-
-//    window.removeEventListener("scroll", checkPosition);
-//   }else{
-//     isLoading = true;
-//     responseData();
-//     refresh();
-//   }
-  
-// }

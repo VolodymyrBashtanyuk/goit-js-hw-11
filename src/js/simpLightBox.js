@@ -1,16 +1,11 @@
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
-let lightbox = null;
+const lightbox = new SimpleLightbox('.gallery a', {
+    captionSelector: 'img',
+    captionsData: 'alt',
+    captionPosition: 'bottom',
+    captionDelay: 250,
+});
 
-const createLightBox = () => {
-    lightbox = new SimpleLightbox('.gallery a', {
-        captionSelector: 'img',
-        captionsData: 'alt',
-        captionPosition: 'bottom',
-        captionDelay: 250,
-    })
-};
-const refresh = () => lightbox.refresh();
-
-export  { refresh, createLightBox }
+export  { lightbox };
