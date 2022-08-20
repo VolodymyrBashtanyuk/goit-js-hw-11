@@ -38,10 +38,16 @@ function onSearchForm(e) {
       responseData();
 };
 
+function onLoadButton() {
+  increment(); 
+  responseData();
+};
+
 async function responseData() {
     try {
       const collectionGalleries = await fetchImage(name, page);
       notification(collectionGalleries);
+      insertGalleries(collectionGalleries);
       lightbox.refresh();
 
     } catch (error) {
@@ -52,40 +58,36 @@ async function responseData() {
 function notification(response){
   const totalPage = Math.ceil(response.totalHits / PER_PAGE);
 
-  if (response.totalHits === 0) {
+  if (response.totalHits === 0 ) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.')
     buttonIsHidden();
     clearGalleries();
     return;
+    } else if (page === 1) {
+    Notiflix.Notify.success(`Hooray! We found ${response.totalHits} images.`);
+      setTimeout(() => {
+        buttonVisible();
+      }, 500);
   } else if (page >= totalPage){
       buttonIsHidden();
      Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
-  } 
-
-  insertGalleries(response);
-  
+  };
 };
 
 function insertGalleries(galleriesRespons) {
 
-  if (page === 1) {
-    Notiflix.Notify.success(`Hooray! We found ${galleriesRespons.totalHits} images.`);
-    setTimeout(() => {
-      buttonVisible();
-    }, 500)
-  }
-
   const imagesItem = galleriesList(galleriesRespons.hits);
   galleries.insertAdjacentHTML('beforeend', imagesItem);
 
-  const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
+  if(galleriesRespons.total !== 0){
+    const { height: cardHeight } = document.querySelector('.photo-card').firstElementChild.getBoundingClientRect();
 
-  window.scrollBy({
-    top: cardHeight * 11,
-    behavior: 'smooth',
-  })
-
-}
+    window.scrollBy({
+      top: cardHeight * 11,
+      behavior: 'smooth',
+    })
+  }
+};
 
 const galleriesList = (list) => list.reduce((acc, items) => acc + imagesMarkup(items), '');
 
@@ -112,9 +114,4 @@ function imagesMarkup(data) {
   </div>
 </div>
 `
-};
-
-function onLoadButton() {
-  increment(); 
-  responseData();
 };
